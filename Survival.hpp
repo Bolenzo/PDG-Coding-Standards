@@ -28,7 +28,9 @@ class Survival
 public:
   // Destroy this object.
   virtual ~Survival( ) noexcept = 0;
-
+  // Suppress assignment through abstract protocol.
+  Survival& operator = (Survival const&) = delete;
+  
   // Return the probability 'S(T)' that this system will survive until at least
   // the specified 'T'; see the class description for further informations on the
   // analytic properties of the function. An exception of type 'pdg::computation_error'
@@ -56,9 +58,16 @@ public:
 
 private:
   // Implement the 'survival_prob' contract.
-  virtual Probability survival_prob_impl(pdg::Time const& T) const = 0;
+  virtual pdg::Probability survival_prob_impl(pdg::Time const& T) const = 0;
   // Implement the 'hazard_rate' contract.
   virtual double hazard_rate_impl(pdg::Time const& T) const = 0;
+protected:
+  // Implement the 'conditional_survival_prob' contract. A default implementation
+  // calling 'S(T)/S(t)' is supplied, and classes implementing this protocol can
+  // opt into it by calling 'Survival::conditional_survival_prob_impl(T, t)' if
+  // they cannot provide a more efficient implementation.
+  virtual pdg::Probability conditional_survival_prob_impl(
+                             pdg::Time const& T, pdg::Time const& t) const = 0;
 };
 
 } // namespace pdg
@@ -72,25 +81,32 @@ pdg::Survival::~Survival() noexcept = default;
 
 pdg::Probability pdg::Survival::survival_prob(pdg::Time const& T) const
 {
-  // This thin layer can be used to check preconditions
   assert( T >= 0 );
   return survival_prob_impl(T);
 }
 
 pdg::Probability pdg::Survival::conditional_survival_prob(
-    pdg::Time const& T, pdg::Time const& t) const
+                                pdg::Time const& T, pdg::Time const& t) const
 {
   assert( 0 <= t      );
   assert(      t <= T );
-  auto const S_t = survival_prob(t);
-  if (S_t == 0) throw computation_error{};
-  return survival_prob(T) / S_t;
+  return conditional_survival_prob_impl(T, t);
 }
 
 double pdg::Survival::hazard_rate(pdg::Time const& T) const
 {
   assert( T >= 0 );
   return hazard_rate_impl(T);
+}
+
+pdg::Probability pdg::Survival::conditional_survival_prob_impl(
+                                pdg::Time const& T, pdg::Time const& t) const
+{
+  assert( 0 <= t      );
+  assert(      t <= T );
+  auto const S_t = survival_prob(t);
+  if (S_t == 0) throw computation_error{};
+  return survival_prob(T) / S_t;
 }
 
 #endif // SURVIVAL_HPP_INCLUDE_GUARD
