@@ -75,7 +75,7 @@ struct formatter // class template to support partial specialization
 // Return a representation of 'obj' as a formatted string.
 template<typename T>
 std::string format(T const& obj) {
-  return lib::formatter<T>(obj);
+  return lib::formatter<T>{}(obj);
 }
 
 // Print the specified 'obj' to 'stdout'.
