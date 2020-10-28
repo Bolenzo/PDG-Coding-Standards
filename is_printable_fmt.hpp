@@ -72,10 +72,16 @@ struct formatter // class template to support partial specialization
   }
 };
 
+// Return a representation of 'obj' as a formatted string.
+template<typename T>
+void format(T const& obj) {
+  return lib::formatter<T>(obj);
+}
+
 // Print the specified 'obj' to 'stdout'.
 template<typename T>
 void print(T const& obj) {
-  fmt::print("{}", lib::formatter(obj));
+  fmt::print("{}", lib::format(obj));
 }
 
 // 'lib::printable' concept
