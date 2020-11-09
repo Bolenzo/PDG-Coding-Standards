@@ -55,8 +55,12 @@ lib::Handle<Body>::Handle()
 
 template<class Body>
 lib::Handle<Body>::Handle(Handle const& other)
-: handle_{std::make_unique<Body>(other)}
-{ }
+{
+  // Correctly copy moved-from handles.
+  if (other.handle_ != nullptr) {
+    handle_ = std::make_unique<Body>(*other.handle_);
+  }
+}
 
 template<class Body>
 lib::Handle<Body>::Handle(Handle&& other) noexcept = default;
