@@ -99,7 +99,7 @@ lib::Handle<Body, Size>::Handle(Handle const& other)
     using BodyPtr = std::unique_ptr<Body>;
     static_assert( ::fits<BodyPtr, Size>, "storage cannot hold a pointer");
     // Correctly copy moved-from handles...
-    auto const& src_p = *std::launder(reinterpret_cast<BodyPtr*>(&other.storage_));
+    auto const& src_p = *std::launder(reinterpret_cast<BodyPtr const*>(&other.storage_));
     if (src_p != nullptr) { // clone
       ::new (&storage_) BodyPtr(std::make_unique<Body>(::body(other)));
     } 
@@ -170,7 +170,7 @@ auto lib::Handle<Body, Size>::operator -> () const noexcept
     return std::launder(reinterpret_cast<body_type const*>(&storage_));
   }
   else { // allocated dynamically
-    auto const& result = *std::launder(reinterpret_cast<std::unique_ptr<Body>*>(&storage_));
+    auto const& result = *std::launder(reinterpret_cast<std::unique_ptr<Body> const*>(&storage_));
     assert( result != nullptr );
     return result.get();
   }
